@@ -1,0 +1,114 @@
+2026/08/03-22:34:15.993324 17fc4 RocksDB version: 9.8.4
+2026/08/03-22:34:15.993511 17fc4 Compile date 2025-07-09 11:14:20
+2026/08/03-22:34:15.993548 17fc4 DB SUMMARY
+2026/08/03-22:34:15.993570 17fc4 Host name (Env):  MANVITHA
+2026/08/03-22:34:15.993586 17fc4 DB Session ID:  6LU2OFOZYLC14U5EHFS7
+2026/08/03-22:34:15.994510 17fc4 CURRENT file:  CURRENT
+2026/08/03-22:34:15.994524 17fc4 IDENTITY file:  IDENTITY
+2026/08/03-22:34:15.994563 17fc4 MANIFEST file:  MANIFEST-000005 size: 99 Bytes
+2026/08/03-22:34:15.994573 17fc4 SST files in data\streamforge_state dir, Total Num: 0, files: 
+2026/08/03-22:34:15.994582 17fc4 Write Ahead Log file in data\streamforge_state: 000004.log size: 18381 ; 
+2026/08/03-22:34:15.994591 17fc4                         Options.error_if_exists: 0
+2026/08/03-22:34:15.994855 17fc4                       Options.create_if_missing: 1
+2026/08/03-22:34:15.994873 17fc4                         Options.paranoid_checks: 1
+2026/08/03-22:34:15.994878 17fc4             Options.flush_verify_memtable_count: 1
+2026/08/03-22:34:15.994881 17fc4          Options.compaction_verify_record_count: 1
+2026/08/03-22:34:15.994885 17fc4                               Options.track_and_verify_wals_in_manifest: 0
+2026/08/03-22:34:15.994889 17fc4        Options.verify_sst_unique_id_in_manifest: 1
+2026/08/03-22:34:15.994892 17fc4                                     Options.env: 000002196CC35E60
+2026/08/03-22:34:15.994897 17fc4                                      Options.fs: WinFS
+2026/08/03-22:34:15.994905 17fc4                                Options.info_log: 000002196CD90010
+2026/08/03-22:34:15.994908 17fc4                Options.max_file_opening_threads: 16
+2026/08/03-22:34:15.994912 17fc4                              Options.statistics: 0000000000000000
+2026/08/03-22:34:15.994916 17fc4                               Options.use_fsync: 0
+2026/08/03-22:34:15.994919 17fc4                       Options.max_log_file_size: 0
+2026/08/03-22:34:15.994923 17fc4                  Options.max_manifest_file_size: 1073741824
+2026/08/03-22:34:15.994927 17fc4                   Options.log_file_time_to_roll: 0
+2026/08/03-22:34:15.994931 17fc4                       Options.keep_log_file_num: 1000
+2026/08/03-22:34:15.994935 17fc4                    Options.recycle_log_file_num: 0
+2026/08/03-22:34:15.994938 17fc4                         Options.allow_fallocate: 1
+2026/08/03-22:34:15.994942 17fc4                        Options.allow_mmap_reads: 0
+2026/08/03-22:34:15.994945 17fc4                       Options.allow_mmap_writes: 0
+2026/08/03-22:34:15.994949 17fc4                        Options.use_direct_reads: 0
+2026/08/03-22:34:15.994953 17fc4                        Options.use_direct_io_for_flush_and_compaction: 0
+2026/08/03-22:34:15.994957 17fc4          Options.create_missing_column_families: 0
+2026/08/03-22:34:15.994960 17fc4                              Options.db_log_dir: 
+2026/08/03-22:34:15.994964 17fc4                                 Options.wal_dir: 
+2026/08/03-22:34:15.994968 17fc4                Options.table_cache_numshardbits: 6
+2026/08/03-22:34:15.994971 17fc4                         Options.WAL_ttl_seconds: 0
+2026/08/03-22:34:15.994974 17fc4                       Options.WAL_size_limit_MB: 0
+2026/08/03-22:34:15.994978 17fc4                        Options.max_write_batch_group_size_bytes: 1048576
+2026/08/03-22:34:15.994982 17fc4             Options.manifest_preallocation_size: 4194304
+2026/08/03-22:34:15.994985 17fc4                     Options.is_fd_close_on_exec: 1
+2026/08/03-22:34:15.994989 17fc4                   Options.advise_random_on_open: 1
+2026/08/03-22:34:15.994992 17fc4                    Options.db_write_buffer_size: 0
+2026/08/03-22:34:15.994996 17fc4                    Options.write_buffer_manager: 000002196CC357D0
+2026/08/03-22:34:15.994999 17fc4           Options.random_access_max_buffer_size: 1048576
+2026/08/03-22:34:15.995003 17fc4                      Options.use_adaptive_mutex: 0
+2026/08/03-22:34:15.995006 17fc4                            Options.rate_limiter: 0000000000000000
+2026/08/03-22:34:15.995012 17fc4     Options.sst_file_manager.rate_bytes_per_sec: 0
+2026/08/03-22:34:15.995044 17fc4                       Options.wal_recovery_mode: 2
+2026/08/03-22:34:15.995050 17fc4                  Options.enable_thread_tracking: 0
+2026/08/03-22:34:15.995053 17fc4                  Options.enable_pipelined_write: 0
+2026/08/03-22:34:15.995057 17fc4                  Options.unordered_write: 0
+2026/08/03-22:34:15.995060 17fc4         Options.allow_concurrent_memtable_write: 1
+2026/08/03-22:34:15.995064 17fc4      Options.enable_write_thread_adaptive_yield: 1
+2026/08/03-22:34:15.995067 17fc4             Options.write_thread_max_yield_usec: 100
+2026/08/03-22:34:15.995071 17fc4            Options.write_thread_slow_yield_usec: 3
+2026/08/03-22:34:15.995074 17fc4                               Options.row_cache: None
+2026/08/03-22:34:15.995078 17fc4                              Options.wal_filter: None
+2026/08/03-22:34:15.995082 17fc4             Options.avoid_flush_during_recovery: 0
+2026/08/03-22:34:15.995085 17fc4             Options.allow_ingest_behind: 0
+2026/08/03-22:34:15.995089 17fc4             Options.two_write_queues: 0
+2026/08/03-22:34:15.995093 17fc4             Options.manual_wal_flush: 0
+2026/08/03-22:34:15.995096 17fc4             Options.wal_compression: 0
+2026/08/03-22:34:15.995099 17fc4             Options.background_close_inactive_wals: 0
+2026/08/03-22:34:15.995103 17fc4             Options.atomic_flush: 0
+2026/08/03-22:34:15.995106 17fc4             Options.avoid_unnecessary_blocking_io: 0
+2026/08/03-22:34:15.995110 17fc4             Options.prefix_seek_opt_in_only: 0
+2026/08/03-22:34:15.995114 17fc4                 Options.persist_stats_to_disk: 0
+2026/08/03-22:34:15.995117 17fc4                 Options.write_dbid_to_manifest: 1
+2026/08/03-22:34:15.995121 17fc4                 Options.write_identity_file: 1
+2026/08/03-22:34:15.995124 17fc4                 Options.log_readahead_size: 0
+2026/08/03-22:34:15.995128 17fc4                 Options.file_checksum_gen_factory: Unknown
+2026/08/03-22:34:15.995132 17fc4                 Options.best_efforts_recovery: 0
+2026/08/03-22:34:15.995135 17fc4                Options.max_bgerror_resume_count: 2147483647
+2026/08/03-22:34:15.995139 17fc4            Options.bgerror_resume_retry_interval: 1000000
+2026/08/03-22:34:15.995142 17fc4             Options.allow_data_in_errors: 0
+2026/08/03-22:34:15.995146 17fc4             Options.db_host_id: __hostname__
+2026/08/03-22:34:15.995149 17fc4             Options.enforce_single_del_contracts: true
+2026/08/03-22:34:15.995155 17fc4             Options.metadata_write_temperature: kUnknown
+2026/08/03-22:34:15.995159 17fc4             Options.wal_write_temperature: kUnknown
+2026/08/03-22:34:15.995163 17fc4             Options.max_background_jobs: 2
+2026/08/03-22:34:15.995166 17fc4             Options.max_background_compactions: -1
+2026/08/03-22:34:15.995170 17fc4             Options.max_subcompactions: 1
+2026/08/03-22:34:15.995173 17fc4             Options.avoid_flush_during_shutdown: 0
+2026/08/03-22:34:15.995177 17fc4           Options.writable_file_max_buffer_size: 1048576
+2026/08/03-22:34:15.995180 17fc4             Options.delayed_write_rate : 16777216
+2026/08/03-22:34:15.995184 17fc4             Options.max_total_wal_size: 0
+2026/08/03-22:34:15.995187 17fc4             Options.delete_obsolete_files_period_micros: 21600000000
+2026/08/03-22:34:15.995191 17fc4                   Options.stats_dump_period_sec: 600
+2026/08/03-22:34:15.995194 17fc4                 Options.stats_persist_period_sec: 600
+2026/08/03-22:34:15.995198 17fc4                 Options.stats_history_buffer_size: 1048576
+2026/08/03-22:34:15.995201 17fc4                          Options.max_open_files: -1
+2026/08/03-22:34:15.995205 17fc4                          Options.bytes_per_sync: 0
+2026/08/03-22:34:15.995209 17fc4                      Options.wal_bytes_per_sync: 0
+2026/08/03-22:34:15.995212 17fc4                   Options.strict_bytes_per_sync: 0
+2026/08/03-22:34:15.995216 17fc4       Options.compaction_readahead_size: 2097152
+2026/08/03-22:34:15.995219 17fc4                  Options.max_background_flushes: -1
+2026/08/03-22:34:15.995236 17fc4 Options.daily_offpeak_time_utc: 
+2026/08/03-22:34:15.995240 17fc4 Compression algorithms supported:
+2026/08/03-22:34:15.995244 17fc4 	kZSTD supported: 1
+2026/08/03-22:34:15.995248 17fc4 	kSnappyCompression supported: 1
+2026/08/03-22:34:15.995252 17fc4 	kBZip2Compression supported: 1
+2026/08/03-22:34:15.995255 17fc4 	kZlibCompression supported: 1
+2026/08/03-22:34:15.995259 17fc4 	kLZ4Compression supported: 1
+2026/08/03-22:34:15.995263 17fc4 	kXpressCompression supported: 0
+2026/08/03-22:34:15.995266 17fc4 	kLZ4HCCompression supported: 1
+2026/08/03-22:34:15.995270 17fc4 	kZSTDNotFinalCompression supported: 1
+2026/08/03-22:34:15.995280 17fc4 Fast CRC32 supported: Not supported on x86
+2026/08/03-22:34:15.995284 17fc4 DMutex implementation: std::mutex
+2026/08/03-22:34:15.995287 17fc4 Jemalloc supported: 0
+2026/08/03-22:34:15.995782 17fc4 [WARN] [db/db_impl/db_impl_open.cc:2311] DB::Open() failed: IO error: Failed to create lock file: data\streamforge_state/LOCK: The process cannot access the file because it is being used by another process.
+2026/08/03-22:34:15.995818 17fc4 [db/db_impl/db_impl.cc:500] Shutdown: canceling all background work
+2026/08/03-22:34:15.995860 17fc4 [db/db_impl/db_impl.cc:709] Shutdown complete

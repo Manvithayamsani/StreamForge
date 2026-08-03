@@ -3,6 +3,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 
 from kafka import KafkaConsumer
+from state_store import StateStore
 
 
 TOPIC = "streamforge-events"
@@ -22,21 +23,19 @@ def get_window_start(timestamp: str) -> datetime:
         tz=timezone.utc,
     )
 
-def close_completed_windows(windows):
-    current_time = datetime.now(timezone.utc)
 
+def close_completed_windows(windows, state_store):
+    current_time = datetime.now(timezone.utc)
     windows_to_remove = []
 
     for (truck_id, window_start), stats in windows.items():
 
-        window_end = window_start.timestamp() + WINDOW_SIZE_SECONDS
         window_end = datetime.fromtimestamp(
-            window_end,
+            window_start.timestamp() + WINDOW_SIZE_SECONDS,
             tz=timezone.utc,
         )
 
         if current_time >= window_end:
-
             average = (
                 stats["temperature_sum"]
                 / stats["reading_count"]
@@ -53,18 +52,33 @@ def close_completed_windows(windows):
             print(f"Average  : {average:.2f}°C")
             print("=" * 50)
 
-            windows_to_remove.append((truck_id, window_start))
+            windows_to_remove.append(
+                (truck_id, window_start)
+            )
 
-    for key in windows_to_remove:
-        del windows[key]
+    # Remove completed windows from RAM AND RocksDB
+    for truck_id, window_start in windows_to_remove:
+        del windows[(truck_id, window_start)]
+
+        state_store.delete_window(
+            truck_id,
+            window_start,
+        )
+
 
 def main() -> None:
+
+    # Connect to Kafka
     consumer = KafkaConsumer(
-       TOPIC,
-    bootstrap_servers="localhost:9092",
-    auto_offset_reset="latest",
+        TOPIC,
+        bootstrap_servers="localhost:9092",
+        auto_offset_reset="latest",
     )
 
+    # Open RocksDB
+    state_store = StateStore()
+
+    # Create RAM state
     windows = defaultdict(
         lambda: {
             "temperature_sum": 0.0,
@@ -72,36 +86,61 @@ def main() -> None:
         }
     )
 
+    # Recover previous state from RocksDB
+    for saved_window in state_store.load_windows():
+
+        truck_id = saved_window["truck_id"]
+
+        window_start = datetime.fromisoformat(
+            saved_window["window_start"]
+        )
+
+        windows[(truck_id, window_start)] = {
+            "temperature_sum":
+                saved_window["temperature_sum"],
+            "reading_count":
+                saved_window["reading_count"],
+        }
+
+    print(
+        f"Recovered {len(windows)} windows from RocksDB."
+    )
+
     print("Stream processor started.")
     print("Waiting for truck telemetry...\n")
 
     try:
         for message in consumer:
-            event = json.loads(message.value.decode("utf-8"))
+
+            event = json.loads(
+                message.value.decode("utf-8")
+            )
 
             truck_id = event.get("truck_id")
             temperature = event.get("temperature")
             timestamp = event.get("timestamp")
 
-            # Filter stage
+            # FILTER
             if (
                 not truck_id
                 or temperature is None
                 or not timestamp
-                or temperature <= 0
+                or temperature < -50
                 or temperature > 100
             ):
-                print(f"Filtered invalid event: {event}")
+                print(
+                    f"Filtered invalid event: {event}"
+                )
                 continue
 
-            # Map stage
+            # MAP
             normalized_event = {
                 "truck_id": truck_id,
                 "temperature": float(temperature),
                 "timestamp": timestamp,
             }
 
-            # Window stage
+            # WINDOW
             window_start = get_window_start(
                 normalized_event["timestamp"]
             )
@@ -111,16 +150,35 @@ def main() -> None:
                 window_start,
             )
 
-            windows[window_key]["temperature_sum"] += (
-                normalized_event["temperature"]
+            # Update RAM state
+            windows[window_key][
+                "temperature_sum"
+            ] += normalized_event["temperature"]
+
+            windows[window_key][
+                "reading_count"
+            ] += 1
+
+            # Persist the updated window in RocksDB
+            state_store.save_window(
+                normalized_event["truck_id"],
+                window_start,
+                windows[window_key],
             )
-            windows[window_key]["reading_count"] += 1
-            close_completed_windows(windows)
+
+            # Close completed windows
+            close_completed_windows(
+                windows,
+                state_store,
+            )
+
     except KeyboardInterrupt:
         print("\nStream processor stopped.")
 
     finally:
         consumer.close()
+        state_store.close()
+        print("Kafka consumer and RocksDB closed.")
 
 
 if __name__ == "__main__":
