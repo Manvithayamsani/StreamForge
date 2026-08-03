@@ -1,0 +1,6 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# RocksDB runtime state
+data/streamforge_state/
