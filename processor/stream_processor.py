@@ -3,11 +3,30 @@ from collections import defaultdict
 from datetime import datetime, timezone
 
 from kafka import KafkaConsumer
+from prometheus_client import Counter, Gauge, start_http_server
 from state_store import StateStore
 
 
 TOPIC = "streamforge-events"
 WINDOW_SIZE_SECONDS = 300  # 5 minutes
+
+# Prometheus Metrics Definitions
+EVENTS_PROCESSED = Counter(
+    "streamforge_events_processed_total",
+    "Total number of telemetry events processed",
+)
+EVENTS_FILTERED = Counter(
+    "streamforge_events_filtered_total",
+    "Total number of telemetry events filtered",
+)
+WINDOWS_CLOSED = Counter(
+    "streamforge_windows_closed_total",
+    "Total number of completed windows",
+)
+ACTIVE_WINDOWS = Gauge(
+    "streamforge_active_windows",
+    "Current number of active windows",
+)
 
 
 def get_window_start(timestamp: str) -> datetime:
@@ -56,6 +75,9 @@ def close_completed_windows(windows, state_store):
                 (truck_id, window_start)
             )
 
+            # Increment closed windows counter
+            WINDOWS_CLOSED.inc()
+
     # Remove completed windows from RAM AND RocksDB
     for truck_id, window_start in windows_to_remove:
         del windows[(truck_id, window_start)]
@@ -65,8 +87,14 @@ def close_completed_windows(windows, state_store):
             window_start,
         )
 
+    # Update active windows count
+    ACTIVE_WINDOWS.set(len(windows))
+
 
 def main() -> None:
+    # Start Prometheus HTTP server
+    start_http_server(8000)
+    print("Prometheus metrics available at http://localhost:8000/metrics")
 
     # Connect to Kafka
     consumer = KafkaConsumer(
@@ -116,6 +144,9 @@ def main() -> None:
                 message.value.decode("utf-8")
             )
 
+            # Track event processed
+            EVENTS_PROCESSED.inc()
+
             truck_id = event.get("truck_id")
             temperature = event.get("temperature")
             timestamp = event.get("timestamp")
@@ -128,6 +159,7 @@ def main() -> None:
                 or temperature < -50
                 or temperature > 100
             ):
+                EVENTS_FILTERED.inc()
                 print(
                     f"Filtered invalid event: {event}"
                 )
@@ -158,6 +190,9 @@ def main() -> None:
             windows[window_key][
                 "reading_count"
             ] += 1
+
+            # Update gauge for active windows
+            ACTIVE_WINDOWS.set(len(windows))
 
             # Persist the updated window in RocksDB
             state_store.save_window(
