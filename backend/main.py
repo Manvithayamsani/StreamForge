@@ -3,10 +3,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from prometheus_client import REGISTRY
 
-from backend.event_store import events
 from backend.kafka_consumer import consume_kafka_events
+from backend.routes.events import router as events_router
+from backend.routes.health import router as health_router
+from backend.routes.topology import router as topology_router
+from backend.routes.workers import router as workers_router
 
 
 @asynccontextmanager
@@ -16,16 +18,22 @@ async def lifespan(app: FastAPI):
         daemon=True,
         name="streamforge-kafka-consumer",
     )
+
     consumer_thread.start()
+
     yield
 
 
 app = FastAPI(
     title="StreamForge API",
-    description="Backend API for the StreamForge real-time event streaming platform",
+    description=(
+        "Backend API for the StreamForge "
+        "real-time event streaming platform"
+    ),
     version="1.0.0",
     lifespan=lifespan,
 )
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -36,48 +44,15 @@ app.add_middleware(
 )
 
 
-def get_metric_value(metric_name: str):
-    for metric in REGISTRY.collect():
-        if metric.name == metric_name:
-            for sample in metric.samples:
-                if sample.name == metric_name:
-                    return sample.value
-    return 0
+app.include_router(health_router)
+app.include_router(events_router)
+app.include_router(topology_router)
+app.include_router(workers_router)
 
 
 @app.get("/")
 def root() -> dict:
     return {
         "message": "Welcome to StreamForge API",
-    }
-
-
-@app.get("/health")
-def health_check() -> dict:
-    return {
-        "status": "healthy",
-        "service": "StreamForge API",
-    }
-
-
-@app.get("/events")
-def get_events() -> list[dict]:
-    return events.copy()
-
-
-@app.get("/metrics-summary")
-def metrics_summary():
-    return {
-        "events_processed": get_metric_value(
-            "streamforge_events_processed_total"
-        ),
-        "events_filtered": get_metric_value(
-            "streamforge_events_filtered_total"
-        ),
-        "windows_closed": get_metric_value(
-            "streamforge_windows_closed_total"
-        ),
-        "active_windows": get_metric_value(
-            "streamforge_active_windows"
-        ),
+        "status": "running",
     }

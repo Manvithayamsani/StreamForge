@@ -3,32 +3,39 @@ import { useEffect, useState } from "react";
 import Header from "../components/Header";
 import MetricCard from "../components/MetricCard";
 import PipelineFlow from "../components/PipelineFlow";
-import { fetchMetrics } from "../services/metricsService";
+import { fetchTopology } from "../services/metricsService";
 
 function Dashboard() {
-  const [metrics, setMetrics] = useState({
-    eventsProcessed: 0,
-    eventsFiltered: 0,
-    windowsClosed: 0,
-    activeWindows: 0,
+  const [topology, setTopology] = useState({
+    pipeline: [],
+    summary: {
+      workers_online: 0,
+      events_processed: 0,
+      events_filtered: 0,
+      processing_rate: 0,
+      active_partitions: 0,
+      max_processing_lag: 0,
+    },
   });
 
   useEffect(() => {
-    const loadMetrics = async () => {
+    const loadTopology = async () => {
       try {
-        const data = await fetchMetrics();
-        setMetrics(data);
+        const data = await fetchTopology();
+        setTopology(data);
       } catch (error) {
-        console.error("Metrics error:", error);
+        console.error("Topology error:", error);
       }
     };
 
-    loadMetrics();
+    loadTopology();
 
-    const interval = setInterval(loadMetrics, 2000);
+    const interval = setInterval(loadTopology, 2000);
 
     return () => clearInterval(interval);
   }, []);
+
+  const summary = topology.summary;
 
   return (
     <div className="dashboard">
@@ -36,27 +43,37 @@ function Dashboard() {
 
       <section className="metrics">
         <MetricCard
+          title="Workers Online"
+          value={summary.workers_online}
+        />
+
+        <MetricCard
           title="Events Processed"
-          value={metrics.eventsProcessed}
+          value={summary.events_processed}
+        />
+
+        <MetricCard
+          title="Processing Rate"
+          value={`${summary.processing_rate.toFixed(2)} evt/s`}
+        />
+
+        <MetricCard
+          title="Active Partitions"
+          value={summary.active_partitions}
+        />
+
+        <MetricCard
+          title="Processing Lag"
+          value={`${summary.max_processing_lag.toFixed(3)} s`}
         />
 
         <MetricCard
           title="Events Filtered"
-          value={metrics.eventsFiltered}
-        />
-
-        <MetricCard
-          title="Windows Closed"
-          value={metrics.windowsClosed}
-        />
-
-        <MetricCard
-          title="Active Windows"
-          value={metrics.activeWindows}
+          value={summary.events_filtered}
         />
       </section>
 
-      <PipelineFlow />
+      <PipelineFlow pipeline={topology.pipeline} />
     </div>
   );
 }

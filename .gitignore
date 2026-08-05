@@ -6,5 +6,4 @@ __pycache__/
 data/streamforge_state/
 # Faust / RocksDB runtime state
 streamforge-faust-data/
-streamforge-faust-worker-a-data/
-streamforge-faust-worker-b-data/
+streamforge-faust-worker-*-data/

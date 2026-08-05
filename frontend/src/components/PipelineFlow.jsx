@@ -6,48 +6,96 @@ import {
 
 import "@xyflow/react/dist/style.css";
 
-const nodes = [
-  {
-    id: "1",
-    position: { x: 0, y: 100 },
-    data: { label: "🚚 Telemetry Producer" },
-  },
-  {
-    id: "2",
-    position: { x: 220, y: 100 },
-    data: { label: "⚡ Kafka" },
-  },
-  {
-    id: "3",
-    position: { x: 440, y: 100 },
-    data: { label: "🔍 Filter" },
-  },
-  {
-    id: "4",
-    position: { x: 660, y: 100 },
-    data: { label: "🔄 Map" },
-  },
-  {
-    id: "5",
-    position: { x: 880, y: 100 },
-    data: { label: "⏱ 5-Min Window" },
-  },
-  {
-    id: "6",
-    position: { x: 1100, y: 100 },
-    data: { label: "📊 Average" },
-  },
-];
+function PipelineFlow({ pipeline }) {
+  const workers = pipeline.filter(
+    (node) => node.type === "worker"
+  );
 
-const edges = [
-  { id: "1-2", source: "1", target: "2", animated: true },
-  { id: "2-3", source: "2", target: "3", animated: true },
-  { id: "3-4", source: "3", target: "4", animated: true },
-  { id: "4-5", source: "4", target: "5", animated: true },
-  { id: "5-6", source: "5", target: "6", animated: true },
-];
+  const nodes = [
+    {
+      id: "producer",
+      position: { x: 0, y: 180 },
+      data: {
+        label: "🚚 Telemetry Producer",
+      },
+    },
+    {
+      id: "kafka",
+      position: { x: 220, y: 180 },
+      data: {
+        label: "⚡ Kafka\n8 Partitions",
+      },
+    },
+  ];
 
-function PipelineFlow() {
+  const edges = [
+    {
+      id: "producer-kafka",
+      source: "producer",
+      target: "kafka",
+      animated: true,
+    },
+  ];
+
+  workers.forEach((worker, index) => {
+    const y = 40 + index * 220;
+
+    const workerNodeId = worker.id;
+    const windowNodeId = `window-${worker.id}`;
+    const rocksDbNodeId = `rocksdb-${worker.id}`;
+
+    nodes.push(
+      {
+        id: workerNodeId,
+        position: { x: 470, y },
+        data: {
+          label:
+            worker.available && worker.online
+              ? `🟢 ${worker.worker_id}
+${worker.active_partitions} partitions
+${Number(worker.processing_rate).toFixed(2)} evt/s`
+              : `🔴 ${worker.worker_id} Offline`,
+        },
+      },
+      {
+        id: windowNodeId,
+        position: { x: 750, y },
+        data: {
+          label: "⏱ 5-Min Window",
+        },
+      },
+      {
+        id: rocksDbNodeId,
+        position: { x: 1030, y },
+        data: {
+          label: `💾 RocksDB
+${worker.worker_id} Local State`,
+        },
+      }
+    );
+
+    edges.push(
+      {
+        id: `kafka-${workerNodeId}`,
+        source: "kafka",
+        target: workerNodeId,
+        animated: true,
+      },
+      {
+        id: `${workerNodeId}-${windowNodeId}`,
+        source: workerNodeId,
+        target: windowNodeId,
+        animated: true,
+      },
+      {
+        id: `${windowNodeId}-${rocksDbNodeId}`,
+        source: windowNodeId,
+        target: rocksDbNodeId,
+        animated: true,
+      }
+    );
+  });
+
   return (
     <section className="pipeline">
       <h2>Live Processing Pipeline</h2>
