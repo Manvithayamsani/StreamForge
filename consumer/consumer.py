@@ -31,6 +31,49 @@ def create_consumer() -> KafkaConsumer:
         value_deserializer=deserialize_message,
     )
 
+def process_event(event: dict) -> None:
+    """Process an event based on its event type."""
+
+    event_type = event.get("event_type")
+    user_id = event.get("user_id")
+    data = event.get("data", {})
+
+    if event_type == "user_login":
+        print("LOGIN EVENT")
+        print(f"User: {user_id}")
+        print(f"Device: {data.get('device')}")
+        print(f"Location: {data.get('location')}")
+
+    elif event_type == "purchase":
+        price = data.get("price", 0)
+        quantity = data.get("quantity", 0)
+        total_amount = price * quantity
+
+        print("PURCHASE EVENT")
+        print(f"User: {user_id}")
+        print(f"Product: {data.get('product')}")
+        print(f"Price: {price}")
+        print(f"Quantity: {quantity}")
+        print(f"Total amount: {total_amount}")
+
+    elif event_type == "payment_success":
+        print("PAYMENT EVENT")
+        print(f"User: {user_id}")
+        print(f"Method: {data.get('payment_method')}")
+        print(f"Amount: {data.get('amount')}")
+        print(f"Status: {data.get('status')}")
+
+    elif event_type == "user_logout":
+        print("LOGOUT EVENT")
+        print(f"User: {user_id}")
+        print(
+            f"Session duration: "
+            f"{data.get('session_duration_minutes')} minutes"
+        )
+
+    else:
+        print("UNKNOWN EVENT")
+        print(json.dumps(event, indent=2))
 
 def main() -> None:
     consumer = None
@@ -49,7 +92,7 @@ def main() -> None:
                 f"Received from partition {message.partition}, "
                 f"offset {message.offset}:"
             )
-            print(json.dumps(event, indent=2))
+            process_event(event)
             print("-" * 50)
 
     except KeyboardInterrupt:
