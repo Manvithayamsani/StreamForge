@@ -14,10 +14,12 @@ def create_producer() -> KafkaProducer:
 
 
 def generate_truck_telemetry() -> dict:
+    now = datetime.now(timezone.utc)
     return {
         "truck_id": f"TRUCK-{random.randint(1001, 1010)}",
         "temperature": round(random.uniform(-5.0, 45.0), 2),
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": now.isoformat(),
+        "event_timestamp": now.timestamp(),  # UTC Unix timestamp float for Faust event-time windowing
     }
 
 
