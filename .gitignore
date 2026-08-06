@@ -1,0 +1,9 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# RocksDB runtime state
+data/streamforge_state/
+# Faust / RocksDB runtime state
+streamforge-faust-data/
+streamforge-faust-worker-*-data/

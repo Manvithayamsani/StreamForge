@@ -1,0 +1,84 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #0b1120;
+  color: #e5e7eb;
+  font-family: Inter, Arial, sans-serif;
+}
+
+.dashboard {
+  min-height: 100vh;
+  padding: 32px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+h1 {
+  margin: 0;
+  font-size: 36px;
+}
+
+header p {
+  color: #94a3b8;
+  margin-top: 6px;
+}
+
+.status {
+  color: #22c55e;
+  font-weight: 700;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin: 35px 0;
+}
+
+.card {
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  padding: 22px;
+}
+
+.card span {
+  color: #94a3b8;
+}
+
+.card strong {
+  display: block;
+  font-size: 32px;
+  margin-top: 10px;
+}
+
+.pipeline {
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.pipeline h2 {
+  margin-top: 0;
+}
+
+.flow {
+  width: 100%;
+  height: 400px;
+}
+
+.react-flow__node {
+  background: #1e293b;
+  color: white;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  padding: 5px;
+}
