@@ -15,4 +15,16 @@ def test_plain_text_message_deserialization():
     result = deserialize_message(message)
 
     assert result["type"] == "plain-text"
-    assert result["message"] == "hello kafka"     
+    assert result["message"] == "hello kafka" 
+
+
+def test_invalid_message_is_handled():
+
+    message = b"invalid kafka message"
+
+    result = deserialize_message(message)
+
+    assert result["type"] == "plain-text"
+    assert result["message"] == "invalid kafka message"
+
+           

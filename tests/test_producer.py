@@ -1,24 +1,26 @@
-from producer.producer import generate_event
+from producer.producer import generate_truck_telemetry
 
-def test_generate_event_structure():
-    event = generate_event()
+def test_truck_telemetry_structure():
+    event = generate_truck_telemetry()
 
-    assert "event_id" in event
-    assert "event_type" in event
-    assert "user_id" in event
-    assert "source" in event
-    assert "timestamp" in event 
-    assert "data" in event 
+    assert "truck_id" in event 
+    assert "temperature" in event
+    assert "timestamp" in event
+    assert "event_timestamp" in event
 
+def test_truck_id_format():
+    event = generate_truck_telemetry()
 
-def test_event_type_is_valid():
-    event = generate_event()
+    assert event["truck_id"].startswith("TRUCK-") 
 
-    valid_types = [
-        "user_login",
-        "purchase",
-        "payment_success",
-        "user_logout"
-    ]
+def test_temperature_range():
+    event = generate_truck_telemetry() 
 
-    assert event["event_type"] in valid_types     
+    assert -5.0 <= event["temperature"] <= 45.0
+
+def test_event_timestamp_is_float():
+    event = generate_truck_telemetry()
+
+    assert isinstance(event["event_timestamp"], float)
+
+                       
