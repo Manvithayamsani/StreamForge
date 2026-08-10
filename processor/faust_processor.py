@@ -43,6 +43,14 @@ class TruckTelemetry(faust.Record, serializer="json"):
     event_timestamp: float = 0.0
 
 
+def is_valid_telemetry(event: TruckTelemetry) -> bool:
+    return (
+        bool(event.truck_id)
+        and event.temperature > 0
+        and event.temperature <= 100
+    ) 
+
+
 app = faust.App(
     "streamforge-faust",
     broker=BROKER,
@@ -146,11 +154,7 @@ async def process_telemetry(stream):
             rate_window_start = now
 
         # FILTER
-        if (
-            not event.truck_id
-            or event.temperature <= 0
-            or event.temperature > 100
-        ):
+        if not is_valid_telemetry(event):
             EVENTS_FILTERED.inc()
             continue
 

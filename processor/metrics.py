@@ -30,3 +30,13 @@ PROCESSING_LAG = Gauge(
     "streamforge_processing_lag",
     "Approximate processing lag in seconds based on event timestamp",
 )
+
+WINDOWS_CLOSED = Counter(
+    "streamforge_windows_closed_total",
+    "Total number of completed windows",
+)
+
+ACTIVE_WINDOWS = Gauge(
+    "streamforge_active_windows",
+    "Current number of active windows",
+)
