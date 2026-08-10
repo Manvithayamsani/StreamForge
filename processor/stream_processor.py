@@ -3,30 +3,18 @@ from collections import defaultdict
 from datetime import datetime, timezone
 
 from kafka import KafkaConsumer
-from prometheus_client import Counter, Gauge, start_http_server
-from state_store import StateStore
+from prometheus_client import start_http_server
+from processor.metrics import(
+    EVENTS_PROCESSED,
+    EVENTS_FILTERED,
+    WINDOWS_CLOSED,
+    ACTIVE_WINDOWS
+)
+from processor.state_store import StateStore
 
 
 TOPIC = "streamforge-events"
 WINDOW_SIZE_SECONDS = 300  # 5 minutes
-
-# Prometheus Metrics Definitions
-EVENTS_PROCESSED = Counter(
-    "streamforge_events_processed_total",
-    "Total number of telemetry events processed",
-)
-EVENTS_FILTERED = Counter(
-    "streamforge_events_filtered_total",
-    "Total number of telemetry events filtered",
-)
-WINDOWS_CLOSED = Counter(
-    "streamforge_windows_closed_total",
-    "Total number of completed windows",
-)
-ACTIVE_WINDOWS = Gauge(
-    "streamforge_active_windows",
-    "Current number of active windows",
-)
 
 
 def get_window_start(timestamp: str) -> datetime:
