@@ -7,3 +7,9 @@ data/streamforge_state/
 # Faust / RocksDB runtime state
 streamforge-faust-data/
 streamforge-faust-worker-*-data/
+# Virtual environment / test cache
+.venv/
+.pytest_cache/
+
+# Frontend dependencies
+frontend/node_modules/
