@@ -1,0 +1,14 @@
+confluent-kafka==2.15.0
+kafka-python==3.0.9
+
+faust-streaming==0.13.0
+aiokafka==0.14.0
+rocksdict==0.3.29
+
+fastapi==0.141.1
+uvicorn==0.52.0
+
+prometheus_client==0.26.0
+
+pytest==9.1.1
+httpx2==2.10.0
