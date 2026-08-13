@@ -4,11 +4,11 @@ from datetime import datetime, timezone
 
 from kafka import KafkaConsumer
 from prometheus_client import start_http_server
-from processor.metrics import(
+from processor.metrics import (
     EVENTS_PROCESSED,
     EVENTS_FILTERED,
     WINDOWS_CLOSED,
-    ACTIVE_WINDOWS
+    ACTIVE_WINDOWS,
 )
 from processor.state_store import StateStore
 
@@ -31,6 +31,15 @@ def get_window_start(timestamp: str) -> datetime:
     )
 
 
+def calculate_average(stats) -> float:
+    count = stats["reading_count"]
+
+    if count == 0:
+        return 0.0
+
+    return stats["temperature_sum"] / count
+
+
 def close_completed_windows(windows, state_store):
     current_time = datetime.now(timezone.utc)
     windows_to_remove = []
@@ -43,10 +52,7 @@ def close_completed_windows(windows, state_store):
         )
 
         if current_time >= window_end:
-            average = (
-                stats["temperature_sum"]
-                / stats["reading_count"]
-            )
+            average = calculate_average(stats)
 
             print("\n" + "=" * 50)
             print("WINDOW CLOSED")

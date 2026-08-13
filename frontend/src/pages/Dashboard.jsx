@@ -37,6 +37,44 @@ function Dashboard() {
 
   const summary = topology.summary;
 
+  const getSystemStatus = () => {
+    if (summary.workers_online === 0) {
+      return {
+        label: "CRITICAL",
+        message: "No processing workers are online",
+        className: "critical",
+      };
+    }
+
+    if (summary.max_processing_lag > 60) {
+      return {
+        label: "BOTTLENECK",
+        message: `Kafka backlog / processing lag is high (${summary.max_processing_lag.toFixed(
+          1
+        )}s)`,
+        className: "danger",
+      };
+    }
+
+    if (summary.max_processing_lag > 10) {
+      return {
+        label: "WARNING",
+        message: `Processing lag is elevated (${summary.max_processing_lag.toFixed(
+          1
+        )}s)`,
+        className: "warning",
+      };
+    }
+
+    return {
+      label: "HEALTHY",
+      message: "Stream processing pipeline is operating normally",
+      className: "healthy",
+    };
+  };
+
+  const systemStatus = getSystemStatus();
+
   return (
     <div className="dashboard">
       <Header />
@@ -71,6 +109,22 @@ function Dashboard() {
           title="Events Filtered"
           value={summary.events_filtered}
         />
+      </section>
+
+      <section className={`bottleneck-status ${systemStatus.className}`}>
+        <div>
+          <span className="bottleneck-label">
+            {systemStatus.label}
+          </span>
+
+          <strong>
+            {systemStatus.message}
+          </strong>
+        </div>
+
+        <span>
+          Cluster Rate: {summary.processing_rate.toFixed(2)} evt/s
+        </span>
       </section>
 
       <PipelineFlow pipeline={topology.pipeline} />
