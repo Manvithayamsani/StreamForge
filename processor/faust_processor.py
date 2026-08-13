@@ -46,9 +46,8 @@ class TruckTelemetry(faust.Record, serializer="json"):
 def is_valid_telemetry(event: TruckTelemetry) -> bool:
     return (
         bool(event.truck_id)
-        and event.temperature > 0
-        and event.temperature <= 100
-    ) 
+        and -50 <= event.temperature <= 100
+    )
 
 
 app = faust.App(
@@ -238,6 +237,7 @@ async def process_telemetry(stream):
                 f"Processed: {processed_events:,} | "
                 f"Rate: {rate:,.0f} events/sec"
             )
+
 
 if __name__ == "__main__":
     start_http_server(PROMETHEUS_PORT)
