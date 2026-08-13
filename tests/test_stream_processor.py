@@ -1,6 +1,9 @@
 from datetime import datetime, timezone
 
-from processor.stream_processor import get_window_start
+from processor.stream_processor import (
+    calculate_average,
+    get_window_start,
+)
 
 
 def test_get_window_start():
@@ -31,6 +34,27 @@ def test_get_window_start_for_later_timestamp():
         10,
         5,
         0,
-        tzinfo=timezone.utc
-    )    
+        tzinfo=timezone.utc,
+    )
 
+
+def test_window_average_is_correct():
+    stats = {
+        "temperature_sum": 140.0,
+        "reading_count": 4,
+    }
+
+    result = calculate_average(stats)
+
+    assert result == 35.0
+
+
+def test_empty_window_average():
+    stats = {
+        "temperature_sum": 0.0,
+        "reading_count": 0,
+    }
+
+    result = calculate_average(stats)
+
+    assert result == 0.0

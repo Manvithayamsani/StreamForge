@@ -131,9 +131,46 @@ async def on_partitions_revoked(sender, revoked, **kwargs):
 
 @app.agent(telemetry_topic)
 async def process_telemetry(stream):
-    global processed_events, benchmark_start, rate_window_start, rate_window_events
+    global processed_events, benchmark_start
+    global rate_window_start, rate_window_events
 
     async for event in stream:
+
+        # =========================================================
+        # RAW BENCHMARK PATH
+        # =========================================================
+        if BENCHMARK_MODE:
+
+            if benchmark_start is None:
+                benchmark_start = time.perf_counter()
+
+            processed_events += 1
+
+            # Keep the actual Filter step
+            if not is_valid_telemetry(event):
+                continue
+
+            # Keep the actual Map step
+            truck_id = event.truck_id
+            temperature = float(event.temperature)
+
+            # Do NOT run Prometheus, lag calculation,
+            # RocksDB or window state during raw benchmark.
+            if processed_events % BENCHMARK_REPORT_INTERVAL == 0:
+                elapsed = time.perf_counter() - benchmark_start
+                rate = processed_events / elapsed
+
+                print(
+                    f"[RAW THROUGHPUT] "
+                    f"Processed: {processed_events:,} | "
+                    f"Rate: {rate:,.0f} events/sec"
+                )
+
+            continue
+
+        # =========================================================
+        # NORMAL STREAMFORGE PROCESSING
+        # =========================================================
 
         if benchmark_start is None:
             benchmark_start = time.perf_counter()
@@ -143,8 +180,10 @@ async def process_telemetry(stream):
 
         # LIVE PROCESSING RATE
         rate_window_events += 1
+
         now = time.perf_counter()
         rate_elapsed = now - rate_window_start
+
         if rate_elapsed >= RATE_UPDATE_SECONDS:
             live_rate = rate_window_events / rate_elapsed
 
@@ -158,35 +197,27 @@ async def process_telemetry(stream):
             EVENTS_FILTERED.inc()
             continue
 
+        # MAP
         truck_id = event.truck_id
         temperature = float(event.temperature)
 
-        # LAG CALCULATION
+        # PROCESSING LAG
         if event.event_timestamp > 0:
             event_time = datetime.fromtimestamp(
                 event.event_timestamp,
                 tz=timezone.utc,
             )
+
             lag_seconds = max(
                 0.0,
-                (datetime.now(timezone.utc) - event_time).total_seconds(),
+                (
+                    datetime.now(timezone.utc) - event_time
+                ).total_seconds(),
             )
+
             PROCESSING_LAG.set(lag_seconds)
 
-        # BENCHMARK MODE BYPASS
-        if BENCHMARK_MODE:
-            if processed_events % BENCHMARK_REPORT_INTERVAL == 0:
-                elapsed = time.perf_counter() - benchmark_start
-                rate = processed_events / elapsed
-
-                print(
-                    f"[RAW THROUGHPUT] "
-                    f"Processed: {processed_events:,} | "
-                    f"Rate: {rate:,.0f} events/sec"
-                )
-            continue
-
-        # WINDOWED STATE
+        # 5-MINUTE WINDOWED STATE
         temperature_sum[truck_id] += temperature
         reading_count[truck_id] += 1
 
@@ -198,7 +229,6 @@ async def process_telemetry(stream):
 
         average = total / count
 
-        # BENCHMARK REPORTING
         if processed_events % BENCHMARK_REPORT_INTERVAL == 0:
             elapsed = time.perf_counter() - benchmark_start
             rate = processed_events / elapsed
@@ -208,7 +238,6 @@ async def process_telemetry(stream):
                 f"Processed: {processed_events:,} | "
                 f"Rate: {rate:,.0f} events/sec"
             )
-
 
 if __name__ == "__main__":
     start_http_server(PROMETHEUS_PORT)

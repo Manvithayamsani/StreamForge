@@ -81,4 +81,62 @@ header p {
   border: 1px solid #475569;
   border-radius: 8px;
   padding: 5px;
+  white-space: pre-wrap;
+}
+
+/* System Bottleneck & Status Banner */
+.bottleneck-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin: 0 0 24px;
+  padding: 18px 22px;
+
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-left-width: 5px;
+  border-radius: 12px;
+}
+
+.bottleneck-status div {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.bottleneck-status strong {
+  font-size: 15px;
+}
+
+.bottleneck-label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.bottleneck-status.healthy {
+  border-left-color: #22c55e;
+}
+
+.bottleneck-status.healthy .bottleneck-label {
+  color: #22c55e;
+}
+
+.bottleneck-status.warning {
+  border-left-color: #f59e0b;
+}
+
+.bottleneck-status.warning .bottleneck-label {
+  color: #f59e0b;
+}
+
+.bottleneck-status.danger,
+.bottleneck-status.critical {
+  border-left-color: #ef4444;
+}
+
+.bottleneck-status.danger .bottleneck-label,
+.bottleneck-status.critical .bottleneck-label {
+  color: #ef4444;
 }

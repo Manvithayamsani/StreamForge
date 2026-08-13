@@ -44,17 +44,37 @@ function PipelineFlow({ pipeline }) {
     const windowNodeId = `window-${worker.id}`;
     const rocksDbNodeId = `rocksdb-${worker.id}`;
 
+    const workerLag = Number(worker.processing_lag || 0);
+    const workerRate = Number(worker.processing_rate || 0);
+    let workerStatus = "HEALTHY";
+    let workerBorder = "#22c55e";
+
+    if (!worker.available || !worker.online) {
+      workerStatus = "OFFLINE";
+      workerBorder = "#ef4444";
+    } else if (workerLag > 60) {
+      workerStatus = "BOTTLENECK";
+      workerBorder = "#ef4444";
+    } else if (workerLag > 10) {
+      workerStatus = "WARNING";
+      workerBorder = "#f59e0b";
+    }
+
     nodes.push(
       {
         id: workerNodeId,
         position: { x: 470, y },
+
+        style: {
+          border: `2px solid ${workerBorder}`,
+          minWidth: 170,
+        },
+
         data: {
           label:
             worker.available && worker.online
-              ? `🟢 ${worker.worker_id}
-${worker.active_partitions} partitions
-${Number(worker.processing_rate).toFixed(2)} evt/s`
-              : `🔴 ${worker.worker_id} Offline`,
+              ? `${worker.worker_id}\n${worker.active_partitions} partitions\n${workerRate.toFixed(2)} evt/s\n${workerLag.toFixed(1)}s lag\n[${workerStatus}]`
+              : `${worker.worker_id}\nOFFLINE`,
         },
       },
       {
@@ -68,8 +88,7 @@ ${Number(worker.processing_rate).toFixed(2)} evt/s`
         id: rocksDbNodeId,
         position: { x: 1030, y },
         data: {
-          label: `💾 RocksDB
-${worker.worker_id} Local State`,
+          label: `💾 RocksDB\n${worker.worker_id} Local State`,
         },
       }
     );
