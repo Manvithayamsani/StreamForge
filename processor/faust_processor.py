@@ -1,5 +1,9 @@
+import json
 import time
 from datetime import datetime, timezone
+from urllib.error import URLError
+from urllib.request import Request, urlopen
+from processor.aggregation_publisher import publish_aggregation
 import faust
 from prometheus_client import start_http_server
 
@@ -227,6 +231,14 @@ async def process_telemetry(stream):
             continue
 
         average = total / count
+
+        publish_aggregation(
+            truck_id=truck_id,
+            event_timestamp=event.event_timestamp,
+            total=total,
+            count=count,
+            average=average,
+        )
 
         if processed_events % BENCHMARK_REPORT_INTERVAL == 0:
             elapsed = time.perf_counter() - benchmark_start

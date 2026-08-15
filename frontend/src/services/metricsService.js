@@ -7,3 +7,14 @@ export async function fetchTopology() {
 
   return response.json();
 }
+export async function fetchAggregations() {
+  const response = await fetch(
+    "http://localhost:8000/aggregations"
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch aggregations");
+  }
+
+  return response.json();
+}

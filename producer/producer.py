@@ -35,7 +35,11 @@ def main() -> None:
         while True:
             event = generate_truck_telemetry()
 
-            producer.send(topic, value=event)
+            producer.send(
+                topic,
+                key=event["truck_id"].encode("utf-8"),
+                value=event,
+            )
             producer.flush()
 
             print(f"Sent: {event}")
