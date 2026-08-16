@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+
 import {
   ReactFlow,
   Background,
@@ -6,132 +8,301 @@ import {
 
 import "@xyflow/react/dist/style.css";
 
-function PipelineFlow({ pipeline }) {
-  const workers = pipeline.filter(
-    (node) => node.type === "worker"
+
+function PipelineFlow({ pipeline = [] }) {
+  const workers = useMemo(
+    () =>
+      pipeline.filter(
+        (node) =>
+          node.type === "worker" &&
+          node.online &&
+          node.available
+      ),
+    [pipeline]
   );
 
-  const nodes = [
-    {
-      id: "producer",
-      position: { x: 0, y: 180 },
-      data: {
-        label: "🚚 Telemetry Producer",
-      },
-    },
-    {
-      id: "kafka",
-      position: { x: 220, y: 180 },
-      data: {
-        label: "⚡ Kafka\n8 Partitions",
-      },
-    },
-  ];
 
-  const edges = [
-    {
-      id: "producer-kafka",
-      source: "producer",
-      target: "kafka",
-      animated: true,
-    },
-  ];
-
-  workers.forEach((worker, index) => {
-    const y = 40 + index * 220;
-
-    const workerNodeId = worker.id;
-    const windowNodeId = `window-${worker.id}`;
-    const rocksDbNodeId = `rocksdb-${worker.id}`;
-
-    const workerLag = Number(worker.processing_lag || 0);
-    const workerRate = Number(worker.processing_rate || 0);
-    let workerStatus = "HEALTHY";
-    let workerBorder = "#22c55e";
-
-    if (!worker.available || !worker.online) {
-      workerStatus = "OFFLINE";
-      workerBorder = "#ef4444";
-    } else if (workerLag > 60) {
-      workerStatus = "BOTTLENECK";
-      workerBorder = "#ef4444";
-    } else if (workerLag > 10) {
-      workerStatus = "WARNING";
-      workerBorder = "#f59e0b";
-    }
-
-    nodes.push(
+  const nodes = useMemo(() => {
+    const result = [
       {
-        id: workerNodeId,
-        position: { x: 470, y },
+        id: "producer",
+
+        position: {
+          x: 60,
+          y: 220,
+        },
 
         style: {
-          border: `2px solid ${workerBorder}`,
           minWidth: 170,
+          textAlign: "center",
+        },
+
+        data: {
+          label: "Telemetry Producer",
+        },
+      },
+
+      {
+        id: "kafka",
+
+        position: {
+          x: 300,
+          y: 220,
+        },
+
+        style: {
+          minWidth: 180,
+          textAlign: "center",
+          border: "2px solid #3b82f6",
         },
 
         data: {
           label:
-            worker.available && worker.online
-              ? `${worker.worker_id}\n${worker.active_partitions} partitions\n${workerRate.toFixed(2)} evt/s\n${workerLag.toFixed(1)}s lag\n[${workerStatus}]`
-              : `${worker.worker_id}\nOFFLINE`,
+            "Apache Kafka\n" +
+            "streamforge-events\n" +
+            "8 Partitions",
         },
       },
-      {
-        id: windowNodeId,
-        position: { x: 750, y },
-        data: {
-          label: "⏱ 5-Min Window",
-        },
-      },
-      {
-        id: rocksDbNodeId,
-        position: { x: 1030, y },
-        data: {
-          label: `💾 RocksDB\n${worker.worker_id} Local State`,
-        },
+    ];
+
+
+    workers.forEach(
+      (worker, index) => {
+        const y =
+          20 + index * 190;
+
+        const workerLag =
+          Number(
+            worker.processing_lag || 0
+          );
+
+        const workerRate =
+          Number(
+            worker.processing_rate || 0
+          );
+
+        let status =
+          "HEALTHY";
+
+        let border =
+          "#22c55e";
+
+
+        if (workerLag > 60) {
+          status =
+            "BOTTLENECK";
+
+          border =
+            "#ef4444";
+        } else if (
+          workerLag > 10
+        ) {
+          status =
+            "WARNING";
+
+          border =
+            "#f59e0b";
+        }
+
+
+        result.push(
+          {
+            id: worker.id,
+
+            position: {
+              x: 590,
+              y,
+            },
+
+            style: {
+              border:
+                `2px solid ${border}`,
+
+              minWidth: 170,
+              textAlign: "center",
+            },
+
+            data: {
+              label:
+                `${worker.worker_id}\n` +
+                `${Number(
+                  worker.active_partitions || 0
+                )} partitions\n` +
+                `${workerRate.toFixed(
+                  2
+                )} evt/s\n` +
+                `${workerLag.toFixed(
+                  2
+                )}s lag\n` +
+                `[${status}]`,
+            },
+          },
+
+          {
+            id:
+              `window-${worker.id}`,
+
+            position: {
+              x: 870,
+              y,
+            },
+
+            style: {
+              minWidth: 150,
+              textAlign: "center",
+            },
+
+            data: {
+              label:
+                "5-Min Window",
+            },
+          },
+
+          {
+            id:
+              `rocksdb-${worker.id}`,
+
+            position: {
+              x: 1110,
+              y,
+            },
+
+            style: {
+              minWidth: 180,
+              textAlign: "center",
+            },
+
+            data: {
+              label:
+                `RocksDB\n` +
+                `${worker.worker_id} Local State`,
+            },
+          }
+        );
       }
     );
 
-    edges.push(
+
+    return result;
+  }, [workers]);
+
+
+  const edges = useMemo(() => {
+    const result = [
       {
-        id: `kafka-${workerNodeId}`,
-        source: "kafka",
-        target: workerNodeId,
-        animated: true,
+        id:
+          "producer-kafka",
+
+        source:
+          "producer",
+
+        target:
+          "kafka",
+
+        animated:
+          true,
       },
-      {
-        id: `${workerNodeId}-${windowNodeId}`,
-        source: workerNodeId,
-        target: windowNodeId,
-        animated: true,
-      },
-      {
-        id: `${windowNodeId}-${rocksDbNodeId}`,
-        source: windowNodeId,
-        target: rocksDbNodeId,
-        animated: true,
+    ];
+
+
+    workers.forEach(
+      (worker) => {
+        result.push(
+          {
+            id:
+              `kafka-${worker.id}`,
+
+            source:
+              "kafka",
+
+            target:
+              worker.id,
+
+            animated:
+              true,
+          },
+
+          {
+            id:
+              `${worker.id}-window`,
+
+            source:
+              worker.id,
+
+            target:
+              `window-${worker.id}`,
+
+            animated:
+              true,
+          },
+
+          {
+            id:
+              `window-rocksdb-${worker.id}`,
+
+            source:
+              `window-${worker.id}`,
+
+            target:
+              `rocksdb-${worker.id}`,
+
+            animated:
+              true,
+          }
+        );
       }
     );
-  });
+
+
+    return result;
+  }, [workers]);
+
+
+  const topologyKey =
+    workers
+      .map(
+        (worker) =>
+          worker.id
+      )
+      .sort()
+      .join("-");
+
 
   return (
     <section className="pipeline">
-      <h2>Live Processing Pipeline</h2>
+
+      <h2>
+        Live Processing Pipeline
+      </h2>
 
       <div className="flow">
+
         <ReactFlow
+          key={topologyKey}
           nodes={nodes}
           edges={edges}
           fitView
+          fitViewOptions={{
+            padding: 0.15,
+            minZoom: 0.25,
+            maxZoom: 0.85,
+          }}
           nodesDraggable={false}
+          nodesConnectable={false}
+          elementsSelectable={false}
         >
+
           <Background />
+
           <Controls />
+
         </ReactFlow>
+
       </div>
+
     </section>
   );
 }
+
 
 export default PipelineFlow;

@@ -1,4 +1,5 @@
 import json
+import os
 import random
 import time
 from datetime import datetime, timezone
@@ -6,10 +7,18 @@ from datetime import datetime, timezone
 from kafka import KafkaProducer
 
 
+BROKER = os.getenv(
+    "STREAMFORGE_KAFKA_BOOTSTRAP",
+    "127.0.0.1:9092",
+)
+
+
 def create_producer() -> KafkaProducer:
     return KafkaProducer(
-        bootstrap_servers="localhost:9092",
-        value_serializer=lambda value: json.dumps(value).encode("utf-8"),
+        bootstrap_servers=BROKER,
+        value_serializer=lambda value: json.dumps(
+            value
+        ).encode("utf-8"),
     )
 
 
@@ -27,7 +36,7 @@ def main() -> None:
     producer = create_producer()
     topic = "streamforge-events"
 
-    print("Connected to Kafka at localhost:9092")
+    print(f"Connected to Kafka at {BROKER}")
     print(f"Sending truck telemetry to topic: {topic}")
     print("Press Ctrl+C to stop.\n")
 

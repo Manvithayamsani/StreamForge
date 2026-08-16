@@ -3,7 +3,10 @@ import os
 import time
 from confluent_kafka import Consumer, KafkaException
 
-BROKER = "localhost:9092"
+BROKER = os.getenv(
+    "STREAMFORGE_KAFKA_BOOTSTRAP",
+    "127.0.0.1:9092",
+)
 TOPIC = "streamforge-events"
 WORKER_ID = os.getenv("STREAMFORGE_WORKER_ID", "throughput-worker")
 GROUP_ID = "streamforge-throughput-benchmark"

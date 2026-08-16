@@ -1,4 +1,5 @@
 import json
+import os
 from collections import defaultdict
 from datetime import datetime, timezone
 
@@ -12,6 +13,11 @@ from processor.metrics import (
 )
 from processor.state_store import StateStore
 
+
+BROKER = os.getenv(
+    "STREAMFORGE_KAFKA_BOOTSTRAP",
+    "127.0.0.1:9092",
+)
 
 TOPIC = "streamforge-events"
 WINDOW_SIZE_SECONDS = 300  # 5 minutes
@@ -93,7 +99,7 @@ def main() -> None:
     # Connect to Kafka
     consumer = KafkaConsumer(
         TOPIC,
-        bootstrap_servers="localhost:9092",
+        bootstrap_servers=BROKER,
         auto_offset_reset="latest",
     )
 

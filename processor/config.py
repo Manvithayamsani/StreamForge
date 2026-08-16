@@ -1,7 +1,7 @@
 import os
 
 # Kafka
-BROKER = os.getenv("STREAMFORGE_BROKER", "kafka://localhost:9092")
+BROKER = os.getenv("STREAMFORGE_BROKER", "kafka://127.0.0.1:9092")
 TOPIC = os.getenv("STREAMFORGE_TOPIC", "streamforge-events")
 TOPIC_PARTITIONS = int(os.getenv("STREAMFORGE_PARTITIONS", "8"))
 PROMETHEUS_PORT = int(

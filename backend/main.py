@@ -8,6 +8,12 @@ from backend.kafka_consumer import consume_kafka_events
 from backend.routes.aggregations import (
     router as aggregations_router,
 )
+from backend.routes.stream_control import (
+    router as stream_control_router,
+)
+from backend.routes.cluster_control import (
+    router as cluster_control_router,
+)
 from backend.routes.events import router as events_router
 from backend.routes.health import router as health_router
 from backend.routes.topology import router as topology_router
@@ -52,6 +58,8 @@ app.include_router(events_router)
 app.include_router(topology_router)
 app.include_router(workers_router)
 app.include_router(aggregations_router)
+app.include_router(stream_control_router)
+app.include_router(cluster_control_router)
 
 
 @app.get("/")

@@ -592,3 +592,159 @@ header p {
     gap: 15px;
   }
 }
+
+.stream-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  padding: 22px 26px;
+  margin-bottom: 28px;
+
+  background: #111827;
+
+  border: 1px solid #243044;
+  border-radius: 14px;
+}
+
+.stream-control-info h3 {
+  margin: 5px 0 5px;
+
+  font-size: 20px;
+  color: #f8fafc;
+}
+
+.stream-control-info p {
+  margin: 0;
+
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.stream-control .eyebrow {
+  color: #64748b;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  letter-spacing: 0.16em;
+}
+
+.stream-button {
+  min-width: 190px;
+
+  padding: 13px 20px;
+
+  border-radius: 9px;
+  border: 1px solid transparent;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.stream-button.start {
+  background: rgba(34, 197, 94, 0.12);
+
+  border-color:
+    rgba(34, 197, 94, 0.45);
+
+  color: #22c55e;
+}
+
+.stream-button.start:hover {
+  background:
+    rgba(34, 197, 94, 0.2);
+}
+
+.stream-button.stop {
+  background:
+    rgba(239, 68, 68, 0.12);
+
+  border-color:
+    rgba(239, 68, 68, 0.45);
+
+  color: #ef4444;
+}
+
+.stream-button.stop:hover {
+  background:
+    rgba(239, 68, 68, 0.2);
+}
+
+.stream-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 760px) {
+  .stream-control {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stream-button {
+    width: 100%;
+  }
+}
+.cluster-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 22px 26px;
+  margin-bottom: 24px;
+
+  background: #111827;
+  border: 1px solid #243044;
+  border-radius: 14px;
+}
+
+.cluster-control h3 {
+  margin: 5px 0;
+  color: #f8fafc;
+}
+
+.cluster-control p {
+  margin: 0;
+  color: #94a3b8;
+}
+
+.cluster-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.worker-button {
+  padding: 12px 18px;
+
+  border-radius: 8px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.worker-button.add {
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.45);
+}
+
+.worker-button.remove {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+}
+
+.worker-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

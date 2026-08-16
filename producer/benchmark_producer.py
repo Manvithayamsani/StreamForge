@@ -1,9 +1,15 @@
 import json
+import os
 import time
 from datetime import datetime, timezone
 
 from confluent_kafka import Producer
 
+
+BROKER = os.getenv(
+    "STREAMFORGE_KAFKA_BOOTSTRAP",
+    "127.0.0.1:9092",
+)
 
 TOPIC = "streamforge-events"
 TOTAL_EVENTS = 500_000
@@ -11,7 +17,7 @@ TRUCK_COUNT = 1000
 
 
 producer = Producer({
-    "bootstrap.servers": "localhost:9092",
+    "bootstrap.servers": BROKER,
     "linger.ms": 5,
     "batch.num.messages": 10000,
     "queue.buffering.max.messages": 1_000_000,

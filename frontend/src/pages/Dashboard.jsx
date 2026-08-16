@@ -8,8 +8,13 @@ import AnalyticsPanel from "../components/AnalyticsPanel";
 import {
   fetchTopology,
   fetchAggregations,
+  fetchStreamStatus,
+  startEventStream,
+  stopEventStream,
+  fetchManagedWorkers,
+  addWorker,
+  stopWorker,
 } from "../services/metricsService";
-
 
 function Dashboard() {
   const [topology, setTopology] = useState({
@@ -26,7 +31,11 @@ function Dashboard() {
 
   const [history, setHistory] = useState([]);
   const [aggregations, setAggregations] = useState([]);
+  const [streamRunning, setStreamRunning] = useState(false);
+  const [streamChanging, setStreamChanging] = useState(false);
 
+  const [managedWorkers, setManagedWorkers] = useState([]);
+  const [workerChanging, setWorkerChanging] = useState(false);
 
   useEffect(() => {
     const loadTopology = async () => {
@@ -39,195 +48,274 @@ function Dashboard() {
 
         const sample = {
           time: Date.now(),
-          rate: Number(
-            summary.processing_rate || 0
-          ),
-          lag: Number(
-            summary.max_processing_lag || 0
-          ),
-          processed: Number(
-            summary.events_processed || 0
-          ),
-          filtered: Number(
-            summary.events_filtered || 0
-          ),
+          rate: Number(summary.processing_rate || 0),
+          lag: Number(summary.max_processing_lag || 0),
+          processed: Number(summary.events_processed || 0),
+          filtered: Number(summary.events_filtered || 0),
         };
 
         setHistory((previous) => {
-          const updated = [
-            ...previous,
-            sample,
-          ];
-
+          const updated = [...previous, sample];
           return updated.slice(-30);
         });
       } catch (error) {
-        console.error(
-          "Topology error:",
-          error
-        );
+        console.error("Topology error:", error);
       }
     };
-
 
     const loadAggregations = async () => {
       try {
-        const data =
-          await fetchAggregations();
-
-        setAggregations(
-          data.slice(0, 10)
-        );
+        const data = await fetchAggregations();
+        setAggregations(data.slice(0, 10));
       } catch (error) {
-        console.error(
-          "Aggregation error:",
-          error
-        );
+        console.error("Aggregation error:", error);
       }
     };
-
 
     loadTopology();
     loadAggregations();
 
-    const topologyInterval =
-      setInterval(
-        loadTopology,
-        2000
-      );
-
-    const aggregationInterval =
-      setInterval(
-        loadAggregations,
-        2000
-      );
-
+    const topologyInterval = setInterval(loadTopology, 2000);
+    const aggregationInterval = setInterval(loadAggregations, 2000);
 
     return () => {
-      clearInterval(
-        topologyInterval
-      );
-
-      clearInterval(
-        aggregationInterval
-      );
+      clearInterval(topologyInterval);
+      clearInterval(aggregationInterval);
     };
   }, []);
 
+  useEffect(() => {
+    const loadStreamStatus = async () => {
+      try {
+        const data = await fetchStreamStatus();
+        setStreamRunning(Boolean(data.running));
+      } catch (error) {
+        console.error("Stream status error:", error);
+      }
+    };
 
-  const summary =
-    topology.summary;
+    loadStreamStatus();
 
-  const workers =
-    topology.pipeline.filter(
-      (node) =>
-        node.type === "worker"
+    const interval = setInterval(loadStreamStatus, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadManagedWorkers = async () => {
+    try {
+      const data = await fetchManagedWorkers();
+      setManagedWorkers(data);
+    } catch (error) {
+      console.error("Worker control error:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadManagedWorkers();
+
+    const interval = setInterval(loadManagedWorkers, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleStreamToggle = async () => {
+    if (streamChanging) {
+      return;
+    }
+
+    try {
+      setStreamChanging(true);
+
+      const result = streamRunning
+        ? await stopEventStream()
+        : await startEventStream();
+
+      setStreamRunning(Boolean(result.running));
+    } catch (error) {
+      console.error("Stream control error:", error);
+    } finally {
+      setStreamChanging(false);
+    }
+  };
+
+  const handleAddWorker = async () => {
+    try {
+      setWorkerChanging(true);
+
+      await addWorker();
+
+      await loadManagedWorkers();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setWorkerChanging(false);
+    }
+  };
+
+  const handleRemoveWorker = async () => {
+    const runningWorkers = managedWorkers.filter(
+      (worker) => worker.running
     );
 
+    if (runningWorkers.length === 0) {
+      return;
+    }
+
+    const worker = runningWorkers[runningWorkers.length - 1];
+
+    try {
+      setWorkerChanging(true);
+
+      await stopWorker(worker.worker_id);
+
+      await loadManagedWorkers();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setWorkerChanging(false);
+    }
+  };
+
+  const summary = topology.summary;
+
+  const workers = topology.pipeline.filter(
+    (node) => node.type === "worker"
+  );
 
   const getSystemStatus = () => {
-    if (
-      summary.workers_online === 0
-    ) {
+    if (summary.workers_online === 0) {
       return {
         label: "CRITICAL",
-        message:
-          "No processing workers are online",
+        message: "No processing workers are online",
         className: "critical",
       };
     }
 
-    if (
-      summary.max_processing_lag >
-      60
-    ) {
+    if (summary.max_processing_lag > 60) {
       return {
         label: "BOTTLENECK",
         message:
           `Kafka backlog / processing lag is high (` +
-          `${summary.max_processing_lag.toFixed(
-            1
-          )}s)`,
+          `${summary.max_processing_lag.toFixed(1)}s)`,
         className: "danger",
       };
     }
 
-    if (
-      summary.max_processing_lag >
-      10
-    ) {
+    if (summary.max_processing_lag > 10) {
       return {
         label: "WARNING",
         message:
           `Processing lag is elevated (` +
-          `${summary.max_processing_lag.toFixed(
-            1
-          )}s)`,
+          `${summary.max_processing_lag.toFixed(1)}s)`,
         className: "warning",
       };
     }
 
     return {
       label: "HEALTHY",
-      message:
-        "Stream processing pipeline is operating normally",
+      message: "Stream processing pipeline is operating normally",
       className: "healthy",
     };
   };
 
-
-  const systemStatus =
-    getSystemStatus();
-
+  const systemStatus = getSystemStatus();
 
   return (
     <div className="dashboard">
       <Header />
 
+      <section className="stream-control">
+        <div className="stream-control-info">
+          <span className="eyebrow">SIMULATION CONTROL</span>
+
+          <h3>Telemetry Event Stream</h3>
+
+          <p>
+            {streamRunning
+              ? "Real telemetry events are flowing through Kafka."
+              : "Kafka and workers are ready. Start telemetry when required."}
+          </p>
+        </div>
+
+        <button
+          className={
+            streamRunning ? "stream-button stop" : "stream-button start"
+          }
+          onClick={handleStreamToggle}
+          disabled={streamChanging}
+        >
+          {streamChanging
+            ? "Please wait..."
+            : streamRunning
+            ? "■ Stop Event Stream"
+            : "▶ Start Event Stream"}
+        </button>
+      </section>
+
+      <section className="cluster-control">
+        <div>
+          <span className="eyebrow">CLUSTER CONTROL</span>
+
+          <h3>Processing Workers</h3>
+
+          <p>
+            {managedWorkers.filter((worker) => worker.running).length} workers managed by StreamForge
+          </p>
+        </div>
+
+        <div className="cluster-actions">
+          <button
+            className="worker-button add"
+            onClick={handleAddWorker}
+            disabled={workerChanging}
+          >
+            + Add Worker
+          </button>
+
+          <button
+            className="worker-button remove"
+            onClick={handleRemoveWorker}
+            disabled={
+              workerChanging ||
+              managedWorkers.filter((worker) => worker.running).length === 0
+            }
+          >
+            − Remove Worker
+          </button>
+        </div>
+      </section>
+
       <section className="metrics">
         <MetricCard
           title="Workers Online"
-          value={
-            summary.workers_online
-          }
+          value={summary.workers_online}
         />
 
         <MetricCard
           title="Events Processed"
-          value={
-            summary.events_processed.toLocaleString()
-          }
+          value={summary.events_processed.toLocaleString()}
         />
 
         <MetricCard
           title="Processing Rate"
-          value={`${summary.processing_rate.toFixed(
-            2
-          )} evt/s`}
+          value={`${summary.processing_rate.toFixed(2)} evt/s`}
         />
 
         <MetricCard
           title="Active Partitions"
-          value={
-            summary.active_partitions
-          }
+          value={summary.active_partitions}
         />
 
         <MetricCard
           title="Processing Lag"
-          value={`${summary.max_processing_lag.toFixed(
-            3
-          )} s`}
+          value={`${summary.max_processing_lag.toFixed(3)} s`}
         />
 
         <MetricCard
           title="Events Filtered"
-          value={
-            summary.events_filtered.toLocaleString()
-          }
+          value={summary.events_filtered.toLocaleString()}
         />
       </section>
-
 
       <section
         className={`bottleneck-status ${systemStatus.className}`}
@@ -237,40 +325,22 @@ function Dashboard() {
             {systemStatus.label}
           </span>
 
-          <strong>
-            {
-              systemStatus.message
-            }
-          </strong>
+          <strong>{systemStatus.message}</strong>
         </div>
 
         <span>
-          Cluster Rate:{" "}
-          {summary.processing_rate.toFixed(
-            2
-          )}{" "}
-          evt/s
+          Cluster Rate: {summary.processing_rate.toFixed(2)} evt/s
         </span>
       </section>
 
-
-      <PipelineFlow
-        pipeline={
-          topology.pipeline
-        }
-      />
-
+      <PipelineFlow pipeline={topology.pipeline} />
 
       <section className="aggregation-section">
         <div className="section-heading">
           <div>
-            <span className="section-kicker">
-              STREAM OUTPUT
-            </span>
+            <span className="section-kicker">STREAM OUTPUT</span>
 
-            <h2>
-              Live Window Aggregations
-            </h2>
+            <h2>Live Window Aggregations</h2>
           </div>
 
           <span className="analytics-live">
@@ -278,118 +348,63 @@ function Dashboard() {
           </span>
         </div>
 
-
         <div className="aggregation-card">
           <table className="aggregation-table">
             <thead>
               <tr>
                 <th>Truck</th>
                 <th>Worker</th>
-                <th>
-                  5-Min Window
-                </th>
-                <th>
-                  Readings
-                </th>
-                <th>
-                  Avg Temperature
-                </th>
+                <th>5-Min Window</th>
+                <th>Readings</th>
+                <th>Avg Temperature</th>
               </tr>
             </thead>
 
             <tbody>
-              {
-                aggregations.length ===
-                0
-                  ? (
-                      <tr>
-                        <td
-                          colSpan="5"
-                        >
-                          No aggregation data available
-                        </td>
-                      </tr>
-                    )
-                  : (
-                      aggregations.map(
-                        (item) => {
-                          const start =
-                            new Date(
-                              item.window_start
-                            );
+              {aggregations.length === 0 ? (
+                <tr>
+                  <td colSpan="5">No aggregation data available</td>
+                </tr>
+              ) : (
+                aggregations.map((item) => {
+                  const start = new Date(item.window_start);
+                  const end = new Date(item.window_end);
 
-                          const end =
-                            new Date(
-                              item.window_end
-                            );
+                  const windowLabel =
+                    `${start.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })} - ` +
+                    `${end.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}`;
 
-                          const windowLabel =
-                            `${start.toLocaleTimeString(
-                              [],
-                              {
-                                hour: "2-digit",
-                                minute:
-                                  "2-digit",
-                              }
-                            )} - ` +
-                            `${end.toLocaleTimeString(
-                              [],
-                              {
-                                hour: "2-digit",
-                                minute:
-                                  "2-digit",
-                              }
-                            )}`;
+                  return (
+                    <tr
+                      key={`${item.worker_id}-${item.truck_id}-${item.window_start}`}
+                    >
+                      <td>
+                        <strong>{item.truck_id}</strong>
+                      </td>
 
-                          return (
-                            <tr
-                              key={`${item.worker_id}-${item.truck_id}-${item.window_start}`}
-                            >
-                              <td>
-                                <strong>
-                                  {
-                                    item.truck_id
-                                  }
-                                </strong>
-                              </td>
+                      <td>{item.worker_id}</td>
 
-                              <td>
-                                {
-                                  item.worker_id
-                                }
-                              </td>
+                      <td>{windowLabel}</td>
 
-                              <td>
-                                {
-                                  windowLabel
-                                }
-                              </td>
+                      <td>{item.reading_count}</td>
 
-                              <td>
-                                {
-                                  item.reading_count
-                                }
-                              </td>
-
-                              <td>
-                                {Number(
-                                  item.average_temperature
-                                ).toFixed(
-                                  2
-                                )}
-                                °C
-                              </td>
-                            </tr>
-                          );
-                        }
-                      )
-                    )
-              }
+                      <td>
+                        {Number(item.average_temperature).toFixed(2)} °C
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
       </section>
-
 
       <AnalyticsPanel
         history={history}
@@ -399,6 +414,5 @@ function Dashboard() {
     </div>
   );
 }
-
 
 export default Dashboard;
